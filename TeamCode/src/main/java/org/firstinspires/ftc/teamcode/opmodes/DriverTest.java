@@ -5,11 +5,15 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
+
+import java.util.List;
 
 @Config
 @TeleOp
@@ -19,8 +23,6 @@ public class DriverTest extends OpMode {
     public static double DRIVER_SLOW_MODE_SCALAR = 0.50;
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
-    public static double INTAKE_SPEED_SCALAR = 0.45;
-    public static double GUNNER_STICK_THRESHOLD = 0.04;
 
     private boolean driverSprintMode = false;
     private boolean driverSlowMode = false;
@@ -30,15 +32,30 @@ public class DriverTest extends OpMode {
 
     public SampleMecanumDrive drive;
 
+    private List<LynxModule> allHubs;
+
     @Override
     public void init() {
+        LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         drive = new SampleMecanumDrive(hardwareMap);
+
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
     }
 
     @Override
     public void loop() {
+        // Will run one bulk read per cycle, because the caches are being handled manually and cleared once a loop
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
+
         if (!previousGamepad1.left_stick_button && gamepad1.left_stick_button) {
             driverSprintMode = true;
         }
