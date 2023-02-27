@@ -25,8 +25,7 @@ public class Lift {
     public ElapsedTime timer;
     public PIDFController leftController;
     public PIDFController rightController;
-    public MotionProfile leftMotionProfile;
-    public MotionProfile rightMotionProfile;
+    public MotionProfile motionProfile;
 
     public Servo clawServo;
     public DcMotorEx leftMotor;
@@ -63,16 +62,24 @@ public class Lift {
         clawServo.setPosition(position);
     }
 
-    public boolean finishedFollowingMotionProfiles() {
-        return timer.time() >= leftMotionProfile.duration() && timer.time() >= rightMotionProfile.duration();
+    public boolean finishedFollowingMotionProfile() {
+        return timer.time() >= motionProfile.duration();
     }
 
-    public void followMotionProfiles(double targetPosition) {
+    public void followMotionProfile(double targetPosition) {
         followMotionProfilesAsync(targetPosition);
 
-        while (!Thread.currentThread().isInterrupted() && !finishedFollowingMotionProfiles()) {
+        while (!Thread.currentThread().isInterrupted() && !finishedFollowingMotionProfile()) {
             stepController();
         }
+    }
+
+    public double getCurrentMotorPosition() {
+        return (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2.0;
+    }
+
+    public double getCurrentMotorVelocity() {
+        return (leftMotor.getVelocity() + rightMotor.getVelocity()) / 2.0;
     }
 
     public void followMotionProfilesAsync(double targetPosition) {
@@ -81,16 +88,10 @@ public class Lift {
             targetPosition = 0;
         }
 
-        leftMotionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(leftMotor.getCurrentPosition(), leftMotor.getVelocity()),
-                new MotionState(targetPosition, 0, 0),
-                MAX_VEL,
-                MAX_ACCEL,
-                MAX_JERK
-        );
-
-        rightMotionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(rightMotor.getCurrentPosition(), rightMotor.getVelocity()),
+        double currentPosition = getCurrentMotorPosition();
+        double currentVelocity = getCurrentMotorVelocity();
+        motionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
+                new MotionState(currentPosition, currentVelocity),
                 new MotionState(targetPosition, 0, 0),
                 MAX_VEL,
                 MAX_ACCEL,
@@ -101,8 +102,7 @@ public class Lift {
     }
 
     public void setPower(double power) {
-        leftMotionProfile = null;
-        rightMotionProfile = null;
+        motionProfile = null;
 
         if (power < 0) {
             power = 0;
@@ -114,31 +114,29 @@ public class Lift {
             leftMotor.setPower(power);
         }
 
-        leftController.setTargetPosition(leftMotor.getCurrentPosition());
-        leftController.setTargetVelocity(0);
-        leftController.setTargetAcceleration(0);
-
         if (rightMotor.getCurrentPosition() <= 0) {
             rightMotor.setPower(0);
         } else {
             rightMotor.setPower(power);
         }
 
-        rightController.setTargetPosition(rightMotor.getCurrentPosition());
+        leftController.setTargetPosition(getCurrentMotorPosition());
+        leftController.setTargetVelocity(0);
+        leftController.setTargetAcceleration(0);
+
+        rightController.setTargetPosition(getCurrentMotorPosition());
         rightController.setTargetVelocity(0);
         rightController.setTargetAcceleration(0);
     }
 
     public void stepController() {
-        if (leftMotionProfile != null) {
-            MotionState state = leftMotionProfile.get(timer.time());
+        if (motionProfile != null) {
+            MotionState state = motionProfile.get(timer.time());
+
             leftController.setTargetPosition(state.getX());
             leftController.setTargetVelocity(state.getV());
             leftController.setTargetAcceleration(state.getA());
-        }
 
-        if (rightMotionProfile != null) {
-            MotionState state = rightMotionProfile.get(timer.time());
             rightController.setTargetPosition(state.getX());
             rightController.setTargetVelocity(state.getV());
             rightController.setTargetAcceleration(state.getA());
