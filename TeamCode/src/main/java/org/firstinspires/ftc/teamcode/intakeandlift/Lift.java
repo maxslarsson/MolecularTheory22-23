@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.intakeandlift;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.profile.MotionProfile;
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+@Config
 public class Lift {
     public static PIDCoefficients INTAKE_PID = new PIDCoefficients(.009, 0, 0.0002);
     public static double kV = 0;
@@ -28,6 +30,7 @@ public class Lift {
     public MotionProfile motionProfile;
 
     public Servo clawServo;
+    public Servo clawRotationServo;
     public DcMotorEx leftMotor;
     public DcMotorEx rightMotor;
 
@@ -35,6 +38,7 @@ public class Lift {
         timer = new ElapsedTime();
 
         clawServo = hardwareMap.get(Servo.class, "liftClawServo");
+        clawRotationServo = hardwareMap.get(Servo.class, "liftClawRotationServo");
         leftMotor = hardwareMap.get(DcMotorEx.class, "liftLeftMotor");
         rightMotor = hardwareMap.get(DcMotorEx.class, "liftRightMotor");
 
@@ -58,20 +62,16 @@ public class Lift {
         rightController = new PIDFController(INTAKE_PID, kV, kA, kStatic);
     }
 
+    public void setClawRotation(double position) {
+        clawRotationServo.setPosition(position);
+    }
+
     public void setClawPosition(double position) {
         clawServo.setPosition(position);
     }
 
     public boolean finishedFollowingMotionProfile() {
         return timer.time() >= motionProfile.duration();
-    }
-
-    public void followMotionProfile(double targetPosition) {
-        followMotionProfilesAsync(targetPosition);
-
-        while (!Thread.currentThread().isInterrupted() && !finishedFollowingMotionProfile()) {
-            stepController();
-        }
     }
 
     public double getCurrentMotorPosition() {
@@ -82,7 +82,15 @@ public class Lift {
         return (leftMotor.getVelocity() + rightMotor.getVelocity()) / 2.0;
     }
 
-    public void followMotionProfilesAsync(double targetPosition) {
+    public void followMotionProfile(double targetPosition) {
+        followMotionProfileAsync(targetPosition);
+
+        while (!Thread.currentThread().isInterrupted() && !finishedFollowingMotionProfile()) {
+            stepController();
+        }
+    }
+
+    public void followMotionProfileAsync(double targetPosition) {
         // Add bounds so that the lift can not go too high or too low
         if (targetPosition < 0) {
             targetPosition = 0;
