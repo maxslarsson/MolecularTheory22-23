@@ -12,9 +12,9 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.firstinspires.ftc.teamcode.intakeandlift.Intake;
-import org.firstinspires.ftc.teamcode.intakeandlift.IntakeConstants;
-import org.firstinspires.ftc.teamcode.intakeandlift.Lift;
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.MechanismConstants;
+import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 import java.util.List;
@@ -125,31 +125,31 @@ public class DriveTeleOp extends OpMode {
             liftClawClosed = !liftClawClosed;
         }
 
-        intake.setClawPosition(intakeClawClosed ? IntakeConstants.INTAKE_CLAW_CLOSED_POSITION : IntakeConstants.INTAKE_CLAW_OPEN_POSITION);
-        intake.setArmPosition(intakeArmDown ? IntakeConstants.INTAKE_ARM_DOWN_POSITION : IntakeConstants.INTAKE_ARM_UP_POSITION);
-        lift.setClawPosition(liftClawClosed ? IntakeConstants.LIFT_CLAW_CLOSED_POSITION : IntakeConstants.LIFT_CLAW_OPEN_POSITION);
+        intake.setClawPosition(intakeClawClosed ? MechanismConstants.INTAKE_CLAW_CLOSED_POSITION : MechanismConstants.INTAKE_CLAW_OPEN_POSITION);
+        intake.setArmPosition(intakeArmDown ? MechanismConstants.INTAKE_ARM_DOWN_POSITION : MechanismConstants.INTAKE_ARM_UP_POSITION);
+        lift.setClawPosition(liftClawClosed ? MechanismConstants.LIFT_CLAW_CLOSED_POSITION : MechanismConstants.LIFT_CLAW_OPEN_POSITION);
 
         // Auto-rotate claw if lift is past the threshold position
-        if (lift.getCurrentMotorPosition() > IntakeConstants.LIFT_HEIGHT_TO_ROTATE_CLAW) {
-            lift.setClawRotation(IntakeConstants.LIFT_CLAW_PLACING_CONE_ROTATION);
+        if (lift.getCurrentMotorPosition() > MechanismConstants.LIFT_HEIGHT_TO_ROTATE_CLAW) {
+            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PLACING_CONE_ROTATION);
         } else {
-            lift.setClawRotation(IntakeConstants.LIFT_CLAW_PICKING_UP_CONE_POSITION);
+            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PICKING_UP_CONE_POSITION);
         }
 
         if (!previousGamepad2.dpad_up && gamepad2.dpad_up) {
-            lift.followMotionProfileAsync(IntakeConstants.HIGH_JUNCTION_HEIGHT);
+            lift.followMotionProfileAsync(MechanismConstants.HIGH_JUNCTION_HEIGHT);
         }
 
         if (!previousGamepad2.dpad_right && gamepad2.dpad_right) {
-            lift.followMotionProfileAsync(IntakeConstants.MEDIUM_JUNCTION_HEIGHT);
+            lift.followMotionProfileAsync(MechanismConstants.MEDIUM_JUNCTION_HEIGHT);
         }
 
         if (!previousGamepad2.dpad_left && gamepad2.dpad_left) {
-            lift.followMotionProfileAsync(IntakeConstants.LOW_JUNCTION_HEIGHT);
+            lift.followMotionProfileAsync(MechanismConstants.LOW_JUNCTION_HEIGHT);
         }
 
         if (!previousGamepad2.dpad_down && gamepad2.dpad_down) {
-            lift.followMotionProfileAsync(IntakeConstants.GROUND_JUNCTION_HEIGHT);
+            lift.followMotionProfileAsync(MechanismConstants.GROUND_JUNCTION_HEIGHT);
         }
 
         // ---------

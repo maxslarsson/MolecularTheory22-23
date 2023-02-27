@@ -1,9 +1,9 @@
-package org.firstinspires.ftc.teamcode.intakeandlift;
+package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.acmerobotics.dashboard.config.Config;
 
 @Config
-public class IntakeConstants {
+public class MechanismConstants {
     public static double[] STACK_HEIGHTS = {
             3, // 1st cone
             150, // 2nd cone

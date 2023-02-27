@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.intakeandlift;
+package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
