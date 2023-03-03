@@ -22,13 +22,15 @@ public class MechanismConstants {
 
     public static double INTAKE_CLAW_OPEN_POSITION = 0.33;
     public static double INTAKE_CLAW_CLOSED_POSITION = 0.48;
-    public static double INTAKE_ARM_DOWN_POSITION = 0.68;
-    public static double INTAKE_ARM_UP_POSITION = 0.23;
-    public static double RIGHT_INTAKE_SERVO_OFFSET = -0.1;
+    public static double INTAKE_ARM_DOWN_POSITION = 0.65;
+    public static double INTAKE_ARM_UP_POSITION = 0.19;
+    public static double INTAKE_ARM_DRIVE_POSITION = .45;
 
     public static double LIFT_CLAW_OPEN_POSITION = 0.5;
     public static double LIFT_CLAW_CLOSED_POSITION = 0.35;
     public static double LIFT_CLAW_PLACING_CONE_ROTATION = 0.25;
     public static double LIFT_CLAW_PICKING_UP_CONE_POSITION = 0.75;
-    public static double LIFT_HEIGHT_TO_ROTATE_CLAW = 400;
+    public static double LIFT_HEIGHT_TO_CHANGE_TO_LIFT_MECHANISM = 400;
+    public static double LIFT_HEIGHT_FOR_TRANSFER = 200;
+    public static double LIFT_HEIGHT_ERROR = 25;
 }

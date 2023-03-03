@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.profile.MotionProfile;
@@ -19,10 +21,10 @@ public class Lift {
     public static double kV = 0;
     public static double kA = 0;
     public static double kStatic = 0;
-    public static double kG = 0.0001;
+    public static double kG = 0.0002;
 
-    public static double MAX_VEL = 1400;
-    public static double MAX_ACCEL = 1400;
+    public static double MAX_VEL = 2000;
+    public static double MAX_ACCEL = 2000;
     public static double MAX_JERK = 0;  // Jerk isn't used if it's 0, but it might end up being necessary
 
     public ElapsedTime timer;
@@ -38,9 +40,8 @@ public class Lift {
     public Lift(HardwareMap hardwareMap) {
         timer = new ElapsedTime();
         //win or else sad claudia
-
-//        clawServo = hardwareMap.get(Servo.class, "liftClawServo");
-//        clawRotationServo = hardwareMap.get(Servo.class, "liftClawRotationServo");
+        clawServo = hardwareMap.get(Servo.class, "liftClawServo");
+        clawRotationServo = hardwareMap.get(Servo.class, "liftClawRotationServo");
         leftMotor = hardwareMap.get(DcMotorEx.class, "liftLeftMotor");
         rightMotor = hardwareMap.get(DcMotorEx.class, "liftRightMotor");
 
@@ -152,10 +153,16 @@ public class Lift {
             rightController.setTargetAcceleration(state.getA());
         }
 
-        double leftPower = leftController.update(leftMotor.getCurrentPosition(), leftMotor.getVelocity());
-        double rightPower = rightController.update(rightMotor.getCurrentPosition(), rightMotor.getVelocity());
+        double leftLiftPower = leftController.update(leftMotor.getCurrentPosition(), leftMotor.getVelocity());
+        double rightLiftPower = rightController.update(rightMotor.getCurrentPosition(), rightMotor.getVelocity());
 
-        leftMotor.setPower(leftPower + getGravityAdjustment());
-        rightMotor.setPower(rightPower + getGravityAdjustment());
+        // TODO: Comment out but make sure both approach 0
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.put("leftLiftPower", leftLiftPower);
+        packet.put("rightLiftPower", rightLiftPower);
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
+
+        leftMotor.setPower(leftLiftPower + getGravityAdjustment());
+        rightMotor.setPower(rightLiftPower + getGravityAdjustment());
     }
 }
