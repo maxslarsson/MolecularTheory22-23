@@ -179,6 +179,30 @@ public class DriveTeleOp extends OpMode {
             }
         }
 
+        if (!previousGamepad2.y && gamepad2.y) {
+            switch (liftClawPosition) {
+                case OPEN:
+                    liftClawPosition = ClawPosition.CLOSED;
+                    break;
+                case CLOSED:
+                    liftClawPosition = ClawPosition.OPEN;
+                    break;
+            }
+        }
+
+
+        if (!previousGamepad2.x && gamepad2.x) {
+            switch (liftClawPosition) {
+                case OPEN:
+                    liftClawPosition = ClawPosition.CLOSED;
+                    break;
+                case CLOSED:
+                    liftClawPosition = ClawPosition.OPEN;
+                    break;
+            }
+        }
+
+
         // Set intake arm position
         if (intakeArmPosition == IntakeArmPosition.ARM_UP) {
             intake.setArmPosition(MechanismConstants.INTAKE_ARM_UP_POSITION);
@@ -242,4 +266,4 @@ public class DriveTeleOp extends OpMode {
         previousGamepad1.copy(gamepad1);
         previousGamepad2.copy(gamepad2);
     }
-}
+    }

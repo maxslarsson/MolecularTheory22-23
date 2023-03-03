@@ -23,7 +23,7 @@ public class MechanismConstants {
     public static double INTAKE_CLAW_OPEN_POSITION = 0.33;
     public static double INTAKE_CLAW_CLOSED_POSITION = 0.48;
     public static double INTAKE_ARM_DOWN_POSITION = 0.65;
-    public static double INTAKE_ARM_UP_POSITION = 0.19;
+    public static double INTAKE_ARM_UP_POSITION = 0.10;
     public static double INTAKE_ARM_DRIVE_POSITION = .45;
 
     public static double LIFT_CLAW_OPEN_POSITION = 0.5;

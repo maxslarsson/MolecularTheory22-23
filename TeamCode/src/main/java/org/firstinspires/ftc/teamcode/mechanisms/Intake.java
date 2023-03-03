@@ -23,7 +23,7 @@ public class Intake {
     }
 
     public void setArmPosition(double position) {
-        leftServo.setPosition(position);
+       leftServo.setPosition(position);
         rightServo.setPosition(position);
     }
 }
