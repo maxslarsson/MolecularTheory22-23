@@ -39,8 +39,9 @@ public class DriveTeleOp extends OpMode {
 
     private List<LynxModule> allHubs;
 
-    private boolean driverSprintMode = false;
-    private boolean driverSlowMode = false;
+    private boolean intakeIsForward = false;
+    private boolean sprintMode = false;
+    private boolean slowMode = false;
 
     private boolean intakeArmDown = true;
     private boolean intakeClawClosed = false;
@@ -76,26 +77,34 @@ public class DriveTeleOp extends OpMode {
         // Driver controls
         // ---------------
         if (!previousGamepad1.left_stick_button && gamepad1.left_stick_button) {
-            driverSprintMode = true;
+            sprintMode = true;
         }
 
         if (-gamepad1.left_stick_y < DRIVER_CANCEL_SPRINT_THRESHOLD) {
-            driverSprintMode = false;
+            sprintMode = false;
         }
 
         if (!previousGamepad1.a && gamepad1.a) {
-            driverSlowMode = !driverSlowMode;
+            intakeIsForward = !intakeIsForward;
+        }
+
+        if (!previousGamepad1.b && gamepad1.b) {
+            slowMode = !slowMode;
         }
 
         Vector2d translationalInput = new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x);
 
-        if (!driverSprintMode) {
+        if (!intakeIsForward) {
+            translationalInput = translationalInput.times(-1);
+        }
+
+        if (!sprintMode) {
             translationalInput = translationalInput.times(DRIVER_SPEED_SCALAR);
         }
 
         Pose2d input = new Pose2d(translationalInput, -gamepad1.right_stick_x * DRIVER_ROTATION_SCALAR);
 
-        if (driverSlowMode && !driverSprintMode) {
+        if (slowMode && !sprintMode) {
             input = input.times(DRIVER_SLOW_MODE_SCALAR);
         }
 
@@ -152,8 +161,9 @@ public class DriveTeleOp extends OpMode {
         // ---------------
         // Print telemetry
         // ---------------
-        telemetry.addData("Sprint mode", driverSprintMode);
-        telemetry.addData("Slow mode", driverSlowMode);
+        telemetry.addData("Intake is forward", intakeIsForward);
+        telemetry.addData("Slow mode", slowMode);
+        telemetry.addLine();
         telemetry.addData("Lift position", lift.getCurrentMotorPosition());
 
         // ---------
