@@ -19,6 +19,7 @@ public class Lift {
     public static double kV = 0;
     public static double kA = 0;
     public static double kStatic = 0;
+    public static double kG = 0.0001;
 
     public static double MAX_VEL = 1400;
     public static double MAX_ACCEL = 1400;
@@ -36,13 +37,14 @@ public class Lift {
 
     public Lift(HardwareMap hardwareMap) {
         timer = new ElapsedTime();
+        //win or else sad claudia
 
-        clawServo = hardwareMap.get(Servo.class, "liftClawServo");
-        clawRotationServo = hardwareMap.get(Servo.class, "liftClawRotationServo");
+//        clawServo = hardwareMap.get(Servo.class, "liftClawServo");
+//        clawRotationServo = hardwareMap.get(Servo.class, "liftClawRotationServo");
         leftMotor = hardwareMap.get(DcMotorEx.class, "liftLeftMotor");
         rightMotor = hardwareMap.get(DcMotorEx.class, "liftRightMotor");
 
-        leftMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         MotorConfigurationType leftMotorConfigurationType = leftMotor.getMotorType().clone();
         leftMotorConfigurationType.setAchieveableMaxRPMFraction(1.0);
@@ -82,6 +84,10 @@ public class Lift {
         return (leftMotor.getVelocity() + rightMotor.getVelocity()) / 2.0;
     }
 
+    public double getGravityAdjustment() {
+        return getCurrentMotorPosition() * kG;
+    }
+
     public void followMotionProfile(double targetPosition) {
         followMotionProfileAsync(targetPosition);
 
@@ -112,20 +118,16 @@ public class Lift {
     public void setPower(double power) {
         motionProfile = null;
 
-        if (power < 0) {
-            power = 0;
-        }
-
-        if (leftMotor.getCurrentPosition() <= 0) {
+        if (leftMotor.getCurrentPosition() <= 0 && power < 0) {
             leftMotor.setPower(0);
         } else {
-            leftMotor.setPower(power);
+            leftMotor.setPower(power + getGravityAdjustment());
         }
 
-        if (rightMotor.getCurrentPosition() <= 0) {
+        if (rightMotor.getCurrentPosition() <= 0 && power < 0) {
             rightMotor.setPower(0);
         } else {
-            rightMotor.setPower(power);
+            rightMotor.setPower(power + getGravityAdjustment());
         }
 
         leftController.setTargetPosition(getCurrentMotorPosition());
@@ -153,7 +155,7 @@ public class Lift {
         double leftPower = leftController.update(leftMotor.getCurrentPosition(), leftMotor.getVelocity());
         double rightPower = rightController.update(rightMotor.getCurrentPosition(), rightMotor.getVelocity());
 
-        leftMotor.setPower(leftPower);
-        rightMotor.setPower(rightPower);
+        leftMotor.setPower(leftPower + getGravityAdjustment());
+        rightMotor.setPower(rightPower + getGravityAdjustment());
     }
 }

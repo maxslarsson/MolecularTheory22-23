@@ -20,10 +20,11 @@ public class MechanismConstants {
 
     public static double ON_JUNCTION_HEIGHT_CHANGE = 300;
 
-    public static double INTAKE_CLAW_OPEN_POSITION = 0.5;
-    public static double INTAKE_CLAW_CLOSED_POSITION = 0.35;
-    public static double INTAKE_ARM_DOWN_POSITION = 0.25;
-    public static double INTAKE_ARM_UP_POSITION = 0.75;
+    public static double INTAKE_CLAW_OPEN_POSITION = 0.33;
+    public static double INTAKE_CLAW_CLOSED_POSITION = 0.48;
+    public static double INTAKE_ARM_DOWN_POSITION = 0.68;
+    public static double INTAKE_ARM_UP_POSITION = 0.23;
+    public static double RIGHT_INTAKE_SERVO_OFFSET = -0.1;
 
     public static double LIFT_CLAW_OPEN_POSITION = 0.5;
     public static double LIFT_CLAW_CLOSED_POSITION = 0.35;
