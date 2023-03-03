@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.trajectorysequence.trajectorysequencesegment;
+package org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.profile.MotionProfile;
@@ -7,11 +7,11 @@ import com.acmerobotics.roadrunner.util.Angle;
 
 import java.util.List;
 
-public final class TurnTrajectorySequenceSegment extends TrajectorySequenceSegment {
+public final class TurnSegment extends SequenceSegment {
     private final double totalRotation;
     private final MotionProfile motionProfile;
 
-    public TurnTrajectorySequenceSegment(Pose2d startPose, double totalRotation, MotionProfile motionProfile, List<TrajectoryMarker> markers) {
+    public TurnSegment(Pose2d startPose, double totalRotation, MotionProfile motionProfile, List<TrajectoryMarker> markers) {
         super(
                 motionProfile.duration(),
                 startPose,
