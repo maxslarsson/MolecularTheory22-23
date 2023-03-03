@@ -22,12 +22,12 @@ import java.util.List;
 @Config
 @TeleOp(name = "Drive TeleOp")
 public class DriveTeleOp extends OpMode {
-    public static double DRIVER_SPEED_SCALAR = 0.7;
-    public static double DRIVER_ROTATION_SCALAR = 0.05;
+    public static double DRIVER_SPEED_SCALAR = 0.70;
+    public static double DRIVER_ROTATION_SCALAR = 0.9;
     public static double DRIVER_SLOW_MODE_SCALAR = 0.50;
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
-    public static double INTAKE_SPEED_SCALAR = 0.45;
+    public static double INTAKE_SPEED_SCALAR = 0.6;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
     public Gamepad previousGamepad1 = new Gamepad();
@@ -43,7 +43,7 @@ public class DriveTeleOp extends OpMode {
     private boolean driverSlowMode = false;
 
     private boolean intakeArmDown = true;
-    private boolean intakeClawClosed = true;
+    private boolean intakeClawClosed = false;
     private boolean liftClawClosed = true;
 
     @Override
@@ -87,9 +87,6 @@ public class DriveTeleOp extends OpMode {
             driverSlowMode = !driverSlowMode;
         }
 
-        telemetry.addData("Sprint mode", driverSprintMode);
-        telemetry.addData("Slow mode", driverSlowMode);
-
         Vector2d translationalInput = new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x);
 
         if (!driverSprintMode) {
@@ -127,14 +124,14 @@ public class DriveTeleOp extends OpMode {
 
         intake.setClawPosition(intakeClawClosed ? MechanismConstants.INTAKE_CLAW_CLOSED_POSITION : MechanismConstants.INTAKE_CLAW_OPEN_POSITION);
         intake.setArmPosition(intakeArmDown ? MechanismConstants.INTAKE_ARM_DOWN_POSITION : MechanismConstants.INTAKE_ARM_UP_POSITION);
-        lift.setClawPosition(liftClawClosed ? MechanismConstants.LIFT_CLAW_CLOSED_POSITION : MechanismConstants.LIFT_CLAW_OPEN_POSITION);
+//        lift.setClawPosition(liftClawClosed ? MechanismConstants.LIFT_CLAW_CLOSED_POSITION : MechanismConstants.LIFT_CLAW_OPEN_POSITION);
 
         // Auto-rotate claw if lift is past the threshold position
-        if (lift.getCurrentMotorPosition() > MechanismConstants.LIFT_HEIGHT_TO_ROTATE_CLAW) {
-            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PLACING_CONE_ROTATION);
-        } else {
-            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PICKING_UP_CONE_POSITION);
-        }
+//        if (lift.getCurrentMotorPosition() > MechanismConstants.LIFT_HEIGHT_TO_ROTATE_CLAW) {
+//            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PLACING_CONE_ROTATION);
+//        } else {
+//            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PICKING_UP_CONE_POSITION);
+//        }
 
         if (!previousGamepad2.dpad_up && gamepad2.dpad_up) {
             lift.followMotionProfileAsync(MechanismConstants.HIGH_JUNCTION_HEIGHT);
@@ -151,6 +148,13 @@ public class DriveTeleOp extends OpMode {
         if (!previousGamepad2.dpad_down && gamepad2.dpad_down) {
             lift.followMotionProfileAsync(MechanismConstants.GROUND_JUNCTION_HEIGHT);
         }
+
+        // ---------------
+        // Print telemetry
+        // ---------------
+        telemetry.addData("Sprint mode", driverSprintMode);
+        telemetry.addData("Slow mode", driverSlowMode);
+        telemetry.addData("Lift position", lift.getCurrentMotorPosition());
 
         // ---------
         // Clean up
