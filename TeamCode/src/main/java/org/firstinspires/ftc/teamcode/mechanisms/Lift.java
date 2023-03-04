@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.profile.MotionProfile;
@@ -14,7 +12,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 @Config
 public class Lift {
@@ -54,14 +51,14 @@ public class Lift {
         leftMotor.setMotorType(leftMotorConfigurationType);
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         MotorConfigurationType rightMotorConfigurationType = rightMotor.getMotorType().clone();
         rightMotorConfigurationType.setAchieveableMaxRPMFraction(1.0);
         rightMotor.setMotorType(rightMotorConfigurationType);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         leftController = new PIDFController(INTAKE_PID, kV, kA, kStatic);
         rightController = new PIDFController(INTAKE_PID, kV, kA, kStatic);
@@ -112,6 +109,7 @@ public class Lift {
         timer.reset();
     }
 
+    // Power is automatically gravity corrected
     public void setPower(double power) {
         leftMotionProfile = null;
         rightMotionProfile = null;
@@ -127,14 +125,6 @@ public class Lift {
         } else {
             rightMotor.setPower(power + rightMotor.getCurrentPosition() * kG);
         }
-
-        leftController.setTargetPosition(leftMotor.getCurrentPosition());
-        leftController.setTargetVelocity(0);
-        leftController.setTargetAcceleration(0);
-
-        rightController.setTargetPosition(rightMotor.getCurrentPosition());
-        rightController.setTargetVelocity(0);
-        rightController.setTargetAcceleration(0);
     }
 
     public void stepController() {
