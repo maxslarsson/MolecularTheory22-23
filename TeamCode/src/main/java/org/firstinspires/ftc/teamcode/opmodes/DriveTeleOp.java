@@ -171,8 +171,7 @@ public class DriveTeleOp extends OpMode {
         // Gunner controls
         // ---------------
         if (!clawTransferSequence.isDone()) {
-            lift.leftMotor.setPower(0);
-            lift.rightMotor.setPower(0);
+            lift.freeFloat();
         } else if (Math.abs(gamepad2.left_stick_y) > GUNNER_STICK_THRESHOLD) {
             double liftPower = -gamepad2.left_stick_y * INTAKE_SPEED_SCALAR;
             if (liftPower < 0) liftPower *= INTAKE_DOWN_SCALAR;

@@ -109,6 +109,11 @@ public class Lift {
         timer.reset();
     }
 
+    public void freeFloat() {
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+    }
+
     // Power is automatically gravity corrected
     public void setPower(double power) {
         leftMotionProfile = null;
