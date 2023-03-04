@@ -42,6 +42,8 @@ public class DriveTeleOp extends OpMode {
     public static double INTAKE_DOWN_SCALAR = 0.5;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
+    public static int DRIVER_RUMBLE_DURATION_MS = 500;
+
     public SampleMecanumDrive drive;
     public Intake intake;
     public Lift lift;
@@ -54,7 +56,6 @@ public class DriveTeleOp extends OpMode {
 
     private DrivingDirection drivingDirection = DrivingDirection.INTAKE;
     private DrivingMode drivingMode = DrivingMode.NORMAL;
-
     private IntakeArmPosition intakeArmPosition = IntakeArmPosition.OUT;
     private ClawPosition intakeClawPosition = ClawPosition.OPEN;
     private LiftClawRotation liftClawRotation = LiftClawRotation.IN;
@@ -74,6 +75,7 @@ public class DriveTeleOp extends OpMode {
 
         clawTransferSequence = new Sequence()
                 .run(() -> drivingDirection = DrivingDirection.LIFT)
+                .run(() -> gamepad1.rumble(DRIVER_RUMBLE_DURATION_MS))
                 .run(() -> intakeArmPosition = IntakeArmPosition.IN)
                 .run(() -> liftClawRotation = LiftClawRotation.IN)
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
@@ -94,6 +96,7 @@ public class DriveTeleOp extends OpMode {
                 .waitSeconds(0.05)
                 .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
                 .run(() -> drivingDirection = DrivingDirection.INTAKE)
+                .run(() -> gamepad1.rumble(DRIVER_RUMBLE_DURATION_MS))
                 .waitSeconds(0.1)
                 .run(() -> liftClawPosition = ClawPosition.CLOSED)
                 .waitSeconds(0.1)
@@ -139,8 +142,10 @@ public class DriveTeleOp extends OpMode {
         if (!previousGamepad1.b && gamepad1.b) {
             if (drivingDirection == DrivingDirection.INTAKE) {
                 drivingDirection = DrivingDirection.LIFT;
+                gamepad1.rumble(DRIVER_RUMBLE_DURATION_MS);
             } else if (drivingDirection == DrivingDirection.LIFT) {
                 drivingDirection = DrivingDirection.INTAKE;
+                gamepad1.rumble(DRIVER_RUMBLE_DURATION_MS);
             }
         }
 
