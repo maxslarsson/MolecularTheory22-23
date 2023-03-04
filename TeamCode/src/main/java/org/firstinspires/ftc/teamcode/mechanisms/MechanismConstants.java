@@ -26,6 +26,6 @@ public class MechanismConstants {
     public static double LIFT_CLAW_OPEN_POSITION = 0.03;
     public static double LIFT_CLAW_CLOSED_POSITION = 0.19;
     public static double LIFT_CLAW_IN_ROTATION = 0.25;
-    public static double LIFT_CLAW_INTERMEDIATE_ROTATION = 0.85;
+    public static double LIFT_CLAW_INTERMEDIATE_ROTATION = 0.9;
     public static double LIFT_CLAW_OUT_ROTATION = 1;
 }

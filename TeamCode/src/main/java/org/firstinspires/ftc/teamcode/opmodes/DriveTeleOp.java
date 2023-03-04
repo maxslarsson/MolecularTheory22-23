@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.sequence.Sequence;
 import org.firstinspires.ftc.teamcode.states.ClawPosition;
 import org.firstinspires.ftc.teamcode.states.DrivingDirection;
+import org.firstinspires.ftc.teamcode.states.DrivingMode;
 import org.firstinspires.ftc.teamcode.states.LiftClawRotation;
 import org.firstinspires.ftc.teamcode.states.IntakeArmPosition;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
@@ -28,17 +29,18 @@ import java.util.List;
 @TeleOp(name = "Drive TeleOp")
 public class DriveTeleOp extends OpMode {
     //scalars set by claudia:
-    public static double DRIVER_SPEED_SCALAR = 0.72;
-    public static double DRIVER_ROTATION_SCALAR = 0.65;
-    public static double DRIVER_SLOW_MODE_SCALAR = 0.6;
+    public static double SPRINT_SPEED_SCALAR = 1;
+    public static double SPRINT_ROTATION_SCALAR = 0.75;
+    public static double NORMAL_SPEED_SCALAR = 0.78;
+    public static double NORMAL_ROTATION_SCALAR = 0.65;
+    public static double SLOW_MODE_SPEED_SCALAR = 0.6;
+    public static double SLOW_MODE_ROTATION_SCALAR = 0.6;
+
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
     public static double INTAKE_SPEED_SCALAR = 1;
     public static double INTAKE_DOWN_SCALAR = 0.5;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
-
-    public Gamepad previousGamepad1 = new Gamepad();
-    public Gamepad previousGamepad2 = new Gamepad();
 
     public SampleMecanumDrive drive;
     public Intake intake;
@@ -46,11 +48,12 @@ public class DriveTeleOp extends OpMode {
     private Sequence clawTransferSequence;
     private Sequence placeConeSequence;
 
+    private Gamepad previousGamepad1;
+    private Gamepad previousGamepad2;
     private List<LynxModule> allHubs;
 
     private DrivingDirection drivingDirection = DrivingDirection.INTAKE;
-    private boolean sprintMode = false;
-    private boolean slowMode = false;
+    private DrivingMode drivingMode = DrivingMode.NORMAL;
 
     private IntakeArmPosition intakeArmPosition = IntakeArmPosition.OUT;
     private ClawPosition intakeClawPosition = ClawPosition.OPEN;
@@ -70,6 +73,7 @@ public class DriveTeleOp extends OpMode {
         lift = new Lift(hardwareMap);
 
         clawTransferSequence = new Sequence()
+                .run(() -> drivingDirection = DrivingDirection.LIFT)
                 .run(() -> intakeArmPosition = IntakeArmPosition.IN)
                 .run(() -> liftClawRotation = LiftClawRotation.IN)
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
@@ -89,11 +93,15 @@ public class DriveTeleOp extends OpMode {
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
                 .waitSeconds(0.05)
                 .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
+                .run(() -> drivingDirection = DrivingDirection.INTAKE)
                 .waitSeconds(0.1)
                 .run(() -> liftClawPosition = ClawPosition.CLOSED)
                 .waitSeconds(0.1)
                 .run(() -> liftClawRotation = LiftClawRotation.IN)
                 .run(() -> intakeArmPosition = IntakeArmPosition.OUT);
+
+        previousGamepad1 = new Gamepad();
+        previousGamepad2 = new Gamepad();
 
         allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -113,22 +121,22 @@ public class DriveTeleOp extends OpMode {
         // Driver controls
         // ---------------
         if (!previousGamepad1.left_stick_button && gamepad1.left_stick_button) {
-            sprintMode = true;
+            drivingMode = DrivingMode.SPRINT;
         }
 
         if (-gamepad1.left_stick_y < DRIVER_CANCEL_SPRINT_THRESHOLD) {
-            sprintMode = false;
-        }
-
-        if (!previousGamepad1.b && gamepad1.b) {
-            slowMode = !slowMode;
-        }
-
-        if (sprintMode) {
-            slowMode = false;
+            drivingMode = DrivingMode.NORMAL;
         }
 
         if (!previousGamepad1.a && gamepad1.a) {
+            if (drivingMode == DrivingMode.NORMAL) {
+                drivingMode = DrivingMode.SLOW;
+            } else if (drivingMode == DrivingMode.SLOW) {
+                drivingMode = DrivingMode.NORMAL;
+            }
+        }
+
+        if (!previousGamepad1.b && gamepad1.b) {
             if (drivingDirection == DrivingDirection.INTAKE) {
                 drivingDirection = DrivingDirection.LIFT;
             } else if (drivingDirection == DrivingDirection.LIFT) {
@@ -142,14 +150,14 @@ public class DriveTeleOp extends OpMode {
             translationalInput = translationalInput.times(-1);
         }
 
-        if (!sprintMode) {
-            translationalInput = translationalInput.times(DRIVER_SPEED_SCALAR);
-        }
+        Pose2d input = new Pose2d();
 
-        Pose2d input = new Pose2d(translationalInput, -gamepad1.right_stick_x * DRIVER_ROTATION_SCALAR);
-
-        if (slowMode && !sprintMode) {
-            input = input.times(DRIVER_SLOW_MODE_SCALAR);
+        if (drivingMode == DrivingMode.SPRINT) {
+            input = new Pose2d(translationalInput.times(SPRINT_SPEED_SCALAR), -gamepad1.right_stick_x * SPRINT_ROTATION_SCALAR);
+        } else if (drivingMode == DrivingMode.NORMAL) {
+            input = new Pose2d(translationalInput.times(NORMAL_SPEED_SCALAR), -gamepad1.right_stick_x * NORMAL_ROTATION_SCALAR);
+        } else if (drivingMode == DrivingMode.SLOW) {
+            input = new Pose2d(translationalInput.times(SLOW_MODE_SPEED_SCALAR), -gamepad1.right_stick_x * SLOW_MODE_ROTATION_SCALAR);
         }
 
         drive.setWeightedDrivePower(input);
@@ -232,8 +240,7 @@ public class DriveTeleOp extends OpMode {
         // Print telemetry
         // ---------------
         telemetry.addData("Driving direction", drivingDirection);
-        telemetry.addData("Slow mode", slowMode);
-        telemetry.addData("Sprint mode", sprintMode);
+        telemetry.addData("Driving mode", drivingMode);
         telemetry.addLine();
         telemetry.addData("Intake claw position", intakeClawPosition);
         telemetry.addData("Intake arm position", intakeArmPosition);
