@@ -16,21 +16,16 @@ public class MechanismConstants {
     public static double MEDIUM_JUNCTION_HEIGHT = 1600;
     public static double LOW_JUNCTION_HEIGHT = 1000;
     public static double GROUND_JUNCTION_HEIGHT = 140;
-    public static double BOTTOM = 0;
-
-    public static double ON_JUNCTION_HEIGHT_CHANGE = 300;
 
     public static double INTAKE_CLAW_OPEN_POSITION = 0.33;
     public static double INTAKE_CLAW_CLOSED_POSITION = 0.48;
-    public static double INTAKE_ARM_DOWN_POSITION = 0.65;
-    public static double INTAKE_ARM_UP_POSITION = 0.10;
-    public static double INTAKE_ARM_DRIVE_POSITION = .45;
+    public static double INTAKE_ARM_IN_POSITION = 0.10;
+    public static double INTAKE_ARM_DRIVE_POSITION = 0.35;
+    public static double INTAKE_ARM_OUT_POSITION = 0.63;
 
-    public static double LIFT_CLAW_OPEN_POSITION = 0.5;
-    public static double LIFT_CLAW_CLOSED_POSITION = 0.35;
-    public static double LIFT_CLAW_PLACING_CONE_ROTATION = 0.25;
-    public static double LIFT_CLAW_PICKING_UP_CONE_POSITION = 0.75;
-    public static double LIFT_HEIGHT_TO_CHANGE_TO_LIFT_MECHANISM = 400;
-    public static double LIFT_HEIGHT_FOR_TRANSFER = 200;
-    public static double LIFT_HEIGHT_ERROR = 25;
+    public static double LIFT_CLAW_OPEN_POSITION = 0.03;
+    public static double LIFT_CLAW_CLOSED_POSITION = 0.19;
+    public static double LIFT_CLAW_IN_ROTATION = 0.25;
+    public static double LIFT_CLAW_INTERMEDIATE_ROTATION = 0.85;
+    public static double LIFT_CLAW_OUT_ROTATION = 1;
 }

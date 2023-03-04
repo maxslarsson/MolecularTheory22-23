@@ -17,6 +17,8 @@ import org.firstinspires.ftc.teamcode.mechanisms.MechanismConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.sequence.Sequence;
 import org.firstinspires.ftc.teamcode.states.ClawPosition;
+import org.firstinspires.ftc.teamcode.states.DrivingDirection;
+import org.firstinspires.ftc.teamcode.states.LiftClawRotation;
 import org.firstinspires.ftc.teamcode.states.IntakeArmPosition;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
@@ -26,12 +28,13 @@ import java.util.List;
 @TeleOp(name = "Drive TeleOp")
 public class DriveTeleOp extends OpMode {
     //scalars set by claudia:
-    public static double DRIVER_SPEED_SCALAR = 0.67;
-    public static double DRIVER_ROTATION_SCALAR = 0.9;
-    public static double DRIVER_SLOW_MODE_SCALAR = 0.50;
+    public static double DRIVER_SPEED_SCALAR = 0.72;
+    public static double DRIVER_ROTATION_SCALAR = 0.65;
+    public static double DRIVER_SLOW_MODE_SCALAR = 0.6;
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
-    public static double INTAKE_SPEED_SCALAR = 0.85;
+    public static double INTAKE_SPEED_SCALAR = 1;
+    public static double INTAKE_DOWN_SCALAR = 0.5;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
     public Gamepad previousGamepad1 = new Gamepad();
@@ -41,17 +44,17 @@ public class DriveTeleOp extends OpMode {
     public Intake intake;
     public Lift lift;
     private Sequence clawTransferSequence;
+    private Sequence placeConeSequence;
 
     private List<LynxModule> allHubs;
 
-    private boolean intakeIsForward = false;
+    private DrivingDirection drivingDirection = DrivingDirection.INTAKE;
     private boolean sprintMode = false;
     private boolean slowMode = false;
 
-    private boolean liftIsEnabled = true;
-
-    private IntakeArmPosition intakeArmPosition = IntakeArmPosition.ARM_DRIVE;
+    private IntakeArmPosition intakeArmPosition = IntakeArmPosition.OUT;
     private ClawPosition intakeClawPosition = ClawPosition.OPEN;
+    private LiftClawRotation liftClawRotation = LiftClawRotation.IN;
     private ClawPosition liftClawPosition = ClawPosition.CLOSED;
 
     @Override
@@ -67,18 +70,30 @@ public class DriveTeleOp extends OpMode {
         lift = new Lift(hardwareMap);
 
         clawTransferSequence = new Sequence()
-                .goLambda(() -> liftIsEnabled = false)
-                .goLambda(() -> lift.followMotionProfileAsync(MechanismConstants.LIFT_HEIGHT_FOR_TRANSFER))
-                .waitUntilTrue(() -> Math.abs(lift.getCurrentMotorPosition() - MechanismConstants.LIFT_HEIGHT_FOR_TRANSFER) < MechanismConstants.LIFT_HEIGHT_ERROR)
-                .goLambda(() -> intakeArmPosition = IntakeArmPosition.ARM_UP)
-                .goLambda(() -> lift.setClawPosition(MechanismConstants.LIFT_CLAW_OPEN_POSITION))
-                .waitSeconds(2)
-                .goLambda(() -> lift.setClawPosition(MechanismConstants.LIFT_CLAW_CLOSED_POSITION))
-                .goLambda(() -> intake.setClawPosition(MechanismConstants.INTAKE_CLAW_OPEN_POSITION))
-                .waitSeconds(.25)
-                .goLambda(() -> intakeArmPosition = IntakeArmPosition.ARM_DRIVE)
-                .waitSeconds(.5)
-                .goLambda(() -> liftIsEnabled = true);
+                .run(() -> intakeArmPosition = IntakeArmPosition.IN)
+                .run(() -> liftClawRotation = LiftClawRotation.IN)
+                .run(() -> liftClawPosition = ClawPosition.OPEN)
+                .waitSeconds(0.75)
+                .run(() -> liftClawPosition = ClawPosition.CLOSED)
+                .waitSeconds(0.1)
+                .run(() -> intakeClawPosition = ClawPosition.OPEN)
+                .waitSeconds(0.1)
+                .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
+                .waitSeconds(0.1)
+                .run(() -> intakeArmPosition = IntakeArmPosition.DRIVE)
+                .waitSeconds(0.2);
+
+        placeConeSequence = new Sequence()
+                .run(() -> liftClawRotation = LiftClawRotation.OUT)
+                .waitSeconds(0.15)
+                .run(() -> liftClawPosition = ClawPosition.OPEN)
+                .waitSeconds(0.05)
+                .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
+                .waitSeconds(0.1)
+                .run(() -> liftClawPosition = ClawPosition.CLOSED)
+                .waitSeconds(0.1)
+                .run(() -> liftClawRotation = LiftClawRotation.IN)
+                .run(() -> intakeArmPosition = IntakeArmPosition.OUT);
 
         allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -105,17 +120,25 @@ public class DriveTeleOp extends OpMode {
             sprintMode = false;
         }
 
-        if (!previousGamepad1.a && gamepad1.a) {
-            intakeIsForward = !intakeIsForward;
-        }
-
         if (!previousGamepad1.b && gamepad1.b) {
             slowMode = !slowMode;
         }
 
+        if (sprintMode) {
+            slowMode = false;
+        }
+
+        if (!previousGamepad1.a && gamepad1.a) {
+            if (drivingDirection == DrivingDirection.INTAKE) {
+                drivingDirection = DrivingDirection.LIFT;
+            } else if (drivingDirection == DrivingDirection.LIFT) {
+                drivingDirection = DrivingDirection.INTAKE;
+            }
+        }
+
         Vector2d translationalInput = new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x);
 
-        if (!intakeIsForward) {
+        if (drivingDirection == DrivingDirection.LIFT) {
             translationalInput = translationalInput.times(-1);
         }
 
@@ -134,82 +157,38 @@ public class DriveTeleOp extends OpMode {
         // ---------------
         // Gunner controls
         // ---------------
-        if (Math.abs(gamepad2.left_stick_y) > GUNNER_STICK_THRESHOLD && liftIsEnabled) {
-            lift.setPower(-gamepad2.left_stick_y * INTAKE_SPEED_SCALAR);
+        if (Math.abs(gamepad2.left_stick_y) > GUNNER_STICK_THRESHOLD && clawTransferSequence.isDone()) {
+            double liftPower = -gamepad2.left_stick_y * INTAKE_SPEED_SCALAR;
+            if (liftPower < 0) liftPower *= INTAKE_DOWN_SCALAR;
+            lift.setPower(liftPower);
         } else {
             lift.stepController();
         }
 
-        boolean usingLiftMechanism = lift.getCurrentMotorPosition() > MechanismConstants.LIFT_HEIGHT_TO_CHANGE_TO_LIFT_MECHANISM;
-
-        if (!previousGamepad2.a && gamepad2.a) {
-            if (usingLiftMechanism) {
-                switch (liftClawPosition) {
-                    case OPEN:
-                        liftClawPosition = ClawPosition.CLOSED;
-                        break;
-                    case CLOSED:
-                        liftClawPosition = ClawPosition.OPEN;
-                        break;
-                }
+        if (!previousGamepad2.a && gamepad2.a && placeConeSequence.isDone()) {
+            if (liftClawRotation == LiftClawRotation.INTERMEDIATE) {
+                placeConeSequence.start();
             } else {
-                switch (intakeClawPosition) {
-                    case OPEN:
-                        intakeClawPosition = ClawPosition.CLOSED;
-                        break;
-                    case CLOSED:
-                        intakeClawPosition = ClawPosition.OPEN;
-                        break;
+                if (intakeClawPosition == ClawPosition.OPEN) {
+                    intakeClawPosition = ClawPosition.CLOSED;
+                } else if (intakeClawPosition == ClawPosition.CLOSED) {
+                    intakeClawPosition = ClawPosition.OPEN;
                 }
             }
         }
 
         // Use B to toggle arm position
-        if (!previousGamepad2.b && gamepad2.b) {
-            if (intakeArmPosition == IntakeArmPosition.ARM_UP) {
-                intakeArmPosition = IntakeArmPosition.ARM_DOWN;
-            } else if (intakeArmPosition == IntakeArmPosition.ARM_DOWN) {
-                if (usingLiftMechanism) {
-                    intakeArmPosition = IntakeArmPosition.ARM_DRIVE;
-                } else {
-                    intakeArmPosition = IntakeArmPosition.ARM_UP;
-                }
-            } else if (intakeArmPosition == IntakeArmPosition.ARM_DRIVE) {
-                intakeArmPosition = IntakeArmPosition.ARM_DOWN;
-            }
+        if (!previousGamepad2.b && gamepad2.b && clawTransferSequence.isDone() && intakeClawPosition == ClawPosition.CLOSED) {
+            clawTransferSequence.start();
         }
-
-        if (!previousGamepad2.y && gamepad2.y) {
-            switch (liftClawPosition) {
-                case OPEN:
-                    liftClawPosition = ClawPosition.CLOSED;
-                    break;
-                case CLOSED:
-                    liftClawPosition = ClawPosition.OPEN;
-                    break;
-            }
-        }
-
-
-        if (!previousGamepad2.x && gamepad2.x) {
-            switch (liftClawPosition) {
-                case OPEN:
-                    liftClawPosition = ClawPosition.CLOSED;
-                    break;
-                case CLOSED:
-                    liftClawPosition = ClawPosition.OPEN;
-                    break;
-            }
-        }
-
 
         // Set intake arm position
-        if (intakeArmPosition == IntakeArmPosition.ARM_UP) {
-            intake.setArmPosition(MechanismConstants.INTAKE_ARM_UP_POSITION);
-        } else if (intakeArmPosition == IntakeArmPosition.ARM_DOWN) {
-            intake.setArmPosition(MechanismConstants.INTAKE_ARM_DOWN_POSITION);
-        } else if (intakeArmPosition == IntakeArmPosition.ARM_DRIVE) {
+        if (intakeArmPosition == IntakeArmPosition.IN) {
+            intake.setArmPosition(MechanismConstants.INTAKE_ARM_IN_POSITION);
+        } else if (intakeArmPosition == IntakeArmPosition.DRIVE) {
             intake.setArmPosition(MechanismConstants.INTAKE_ARM_DRIVE_POSITION);
+        } else if (intakeArmPosition == IntakeArmPosition.OUT) {
+            intake.setArmPosition(MechanismConstants.INTAKE_ARM_OUT_POSITION);
         }
 
         // Set intake claw position
@@ -226,14 +205,13 @@ public class DriveTeleOp extends OpMode {
             lift.setClawPosition(MechanismConstants.LIFT_CLAW_CLOSED_POSITION);
         }
 
-        // Set lift claw rotation based on height of lift
-        if (usingLiftMechanism) {
-            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PLACING_CONE_ROTATION);
-        } else {
-            lift.setClawRotation(MechanismConstants.LIFT_CLAW_PICKING_UP_CONE_POSITION);
-            if (intakeArmPosition == IntakeArmPosition.ARM_DRIVE) {
-                intakeArmPosition = IntakeArmPosition.ARM_DOWN;
-            }
+        // Set lift claw rotation
+        if (liftClawRotation == LiftClawRotation.IN) {
+            lift.setClawRotation(MechanismConstants.LIFT_CLAW_IN_ROTATION);
+        } else if (liftClawRotation == LiftClawRotation.INTERMEDIATE) {
+            lift.setClawRotation(MechanismConstants.LIFT_CLAW_INTERMEDIATE_ROTATION);
+        } else if (liftClawRotation == LiftClawRotation.OUT) {
+            lift.setClawRotation(MechanismConstants.LIFT_CLAW_OUT_ROTATION);
         }
 
         // Lift motion profile presets
@@ -253,17 +231,24 @@ public class DriveTeleOp extends OpMode {
         // ---------------
         // Print telemetry
         // ---------------
-        telemetry.addData("Intake is forward", intakeIsForward);
+        telemetry.addData("Driving direction", drivingDirection);
         telemetry.addData("Slow mode", slowMode);
+        telemetry.addData("Sprint mode", sprintMode);
         telemetry.addLine();
-        telemetry.addData("Lift position", lift.getCurrentMotorPosition());
+        telemetry.addData("Intake claw position", intakeClawPosition);
         telemetry.addData("Intake arm position", intakeArmPosition);
+        telemetry.addData("Lift left motor position", lift.leftMotor.getCurrentPosition());
+        telemetry.addData("Lift right motor position", lift.rightMotor.getCurrentPosition());
+        telemetry.addData("Lift claw position", liftClawPosition);
+        telemetry.addData("Lift claw rotation", liftClawRotation);
 
         // ---------
         // Clean up
         // ---------
         drive.update();
+        clawTransferSequence.update();
+        placeConeSequence.update();
         previousGamepad1.copy(gamepad1);
         previousGamepad2.copy(gamepad2);
     }
-    }
+}

@@ -14,10 +14,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 @Config
 public class Lift {
-    public static PIDCoefficients INTAKE_PID = new PIDCoefficients(.009, 0, 0.0002);
+    public static PIDCoefficients INTAKE_PID = new PIDCoefficients(.009, 0, 0.00015);
     public static double kV = 0;
     public static double kA = 0;
     public static double kStatic = 0;
@@ -30,7 +31,8 @@ public class Lift {
     public ElapsedTime timer;
     public PIDFController leftController;
     public PIDFController rightController;
-    public MotionProfile motionProfile;
+    public MotionProfile leftMotionProfile;
+    public MotionProfile rightMotionProfile;
 
     public Servo clawServo;
     public Servo clawRotationServo;
@@ -45,7 +47,7 @@ public class Lift {
         leftMotor = hardwareMap.get(DcMotorEx.class, "liftLeftMotor");
         rightMotor = hardwareMap.get(DcMotorEx.class, "liftRightMotor");
 
-        rightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        leftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         MotorConfigurationType leftMotorConfigurationType = leftMotor.getMotorType().clone();
         leftMotorConfigurationType.setAchieveableMaxRPMFraction(1.0);
@@ -74,19 +76,7 @@ public class Lift {
     }
 
     public boolean finishedFollowingMotionProfile() {
-        return timer.time() >= motionProfile.duration();
-    }
-
-    public double getCurrentMotorPosition() {
-        return (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2.0;
-    }
-
-    public double getCurrentMotorVelocity() {
-        return (leftMotor.getVelocity() + rightMotor.getVelocity()) / 2.0;
-    }
-
-    public double getGravityAdjustment() {
-        return getCurrentMotorPosition() * kG;
+        return (timer.time() >= leftMotionProfile.duration()) && (timer.time() >= rightMotionProfile.duration());
     }
 
     public void followMotionProfile(double targetPosition) {
@@ -103,10 +93,16 @@ public class Lift {
             targetPosition = 0;
         }
 
-        double currentPosition = getCurrentMotorPosition();
-        double currentVelocity = getCurrentMotorVelocity();
-        motionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(currentPosition, currentVelocity),
+        leftMotionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
+                new MotionState(leftMotor.getCurrentPosition(), leftMotor.getVelocity()),
+                new MotionState(targetPosition, 0, 0),
+                MAX_VEL,
+                MAX_ACCEL,
+                MAX_JERK
+        );
+
+        rightMotionProfile = MotionProfileGenerator.generateSimpleMotionProfile(
+                new MotionState(rightMotor.getCurrentPosition(), rightMotor.getVelocity()),
                 new MotionState(targetPosition, 0, 0),
                 MAX_VEL,
                 MAX_ACCEL,
@@ -117,52 +113,57 @@ public class Lift {
     }
 
     public void setPower(double power) {
-        motionProfile = null;
+        leftMotionProfile = null;
+        rightMotionProfile = null;
 
         if (leftMotor.getCurrentPosition() <= 0 && power < 0) {
             leftMotor.setPower(0);
         } else {
-            leftMotor.setPower(power + getGravityAdjustment());
+            leftMotor.setPower(power + leftMotor.getCurrentPosition() * kG);
         }
 
         if (rightMotor.getCurrentPosition() <= 0 && power < 0) {
             rightMotor.setPower(0);
         } else {
-            rightMotor.setPower(power + getGravityAdjustment());
+            rightMotor.setPower(power + rightMotor.getCurrentPosition() * kG);
         }
 
-        leftController.setTargetPosition(getCurrentMotorPosition());
+        leftController.setTargetPosition(leftMotor.getCurrentPosition());
         leftController.setTargetVelocity(0);
         leftController.setTargetAcceleration(0);
 
-        rightController.setTargetPosition(getCurrentMotorPosition());
+        rightController.setTargetPosition(rightMotor.getCurrentPosition());
         rightController.setTargetVelocity(0);
         rightController.setTargetAcceleration(0);
     }
 
     public void stepController() {
-        if (motionProfile != null) {
-            MotionState state = motionProfile.get(timer.time());
-
+        if (leftMotionProfile != null) {
+            MotionState state = leftMotionProfile.get(timer.time());
             leftController.setTargetPosition(state.getX());
             leftController.setTargetVelocity(state.getV());
             leftController.setTargetAcceleration(state.getA());
+            double leftLiftPower = leftController.update(leftMotor.getCurrentPosition(), leftMotor.getVelocity());
+            leftMotor.setPower(leftLiftPower + leftMotor.getCurrentPosition() * kG);
+        } else {
+            double leftMotorPosition = leftMotor.getCurrentPosition();
+            if (leftMotorPosition >= 0) {
+                leftMotor.setPower(leftMotorPosition * kG);
+            }
+        }
 
+        if (rightMotionProfile != null) {
+            MotionState state = rightMotionProfile.get(timer.time());
             rightController.setTargetPosition(state.getX());
             rightController.setTargetVelocity(state.getV());
             rightController.setTargetAcceleration(state.getA());
+            double rightLiftPower = rightController.update(rightMotor.getCurrentPosition(), rightMotor.getVelocity());
+            rightMotor.setPower(rightLiftPower + rightMotor.getCurrentPosition() * kG);
+        } else {
+            double rightMotorPosition = rightMotor.getCurrentPosition();
+            if (rightMotorPosition >= 0) {
+                rightMotor.setPower(rightMotorPosition * kG);
+            }
         }
-
-        double leftLiftPower = leftController.update(leftMotor.getCurrentPosition(), leftMotor.getVelocity());
-        double rightLiftPower = rightController.update(rightMotor.getCurrentPosition(), rightMotor.getVelocity());
-
-        // TODO: Comment out but make sure both approach 0
-        TelemetryPacket packet = new TelemetryPacket();
-        packet.put("leftLiftPower", leftLiftPower);
-        packet.put("rightLiftPower", rightLiftPower);
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
-
-        leftMotor.setPower(leftLiftPower + getGravityAdjustment());
-        rightMotor.setPower(rightLiftPower + getGravityAdjustment());
     }
 }

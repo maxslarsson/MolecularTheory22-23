@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.states;
 
-public enum IntakeArmPosition {
+public enum LiftClawRotation {
     IN,
-    DRIVE,
-    OUT,
+    INTERMEDIATE,
+    OUT
 }

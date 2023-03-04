@@ -15,7 +15,7 @@ public class Sequence {
         segments = new ArrayList<>();
     }
 
-    public Sequence goLambda(RunFunctionSegment lambda) {
+    public Sequence run(RunFunctionSegment lambda) {
         segments.add(lambda);
         return this;
     }
@@ -30,14 +30,18 @@ public class Sequence {
         return this;
     }
 
-    public void run() {
+    public void start() {
         currentIndex = 0;
         segmentsRuntime.reset();
     }
 
+    public boolean isDone() {
+        return currentIndex >= segments.size();
+    }
+
     public void update() {
         //coded by claudia:
-        if (currentIndex >= segments.size()) {
+        if (isDone()) {
             return;
         }
 
