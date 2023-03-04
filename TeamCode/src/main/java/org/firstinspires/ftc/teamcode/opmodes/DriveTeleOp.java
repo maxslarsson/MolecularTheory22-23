@@ -42,7 +42,7 @@ public class DriveTeleOp extends OpMode {
     public static double INTAKE_DOWN_SCALAR = 0.5;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
-    public static int DRIVER_RUMBLE_DURATION_MS = 500;
+    public static int DRIVER_RUMBLE_DURATION_MS = 300;
 
     public SampleMecanumDrive drive;
     public Intake intake;
