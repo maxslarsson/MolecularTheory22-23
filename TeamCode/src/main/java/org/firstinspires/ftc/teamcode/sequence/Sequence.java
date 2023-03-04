@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Sequence {
-    private ElapsedTime segmentsRuntime;
+    private ElapsedTime segmentRuntime;
     private List<BaseSegment> segments;
     private int currentIndex = Integer.MAX_VALUE;
 
     public Sequence() {
-        segmentsRuntime = new ElapsedTime();
+        segmentRuntime = new ElapsedTime();
         segments = new ArrayList<>();
     }
 
@@ -26,13 +26,13 @@ public class Sequence {
     }
 
     public Sequence waitSeconds(double seconds) {
-        segments.add(() -> segmentsRuntime.seconds() >= seconds);
+        segments.add(() -> segmentRuntime.seconds() >= seconds);
         return this;
     }
 
     public void start() {
         currentIndex = 0;
-        segmentsRuntime.reset();
+        segmentRuntime.reset();
     }
 
     public boolean isDone() {
@@ -45,11 +45,14 @@ public class Sequence {
             return;
         }
 
-        BaseSegment currentSequence = segments.get(currentIndex);
-        boolean shouldContinueToNextSequence = currentSequence.shouldContinueToNextSegment();
-        if (shouldContinueToNextSequence) {
-            currentIndex += 1;
-            segmentsRuntime.reset();
+        boolean shouldContinue = true;
+        while (shouldContinue) {
+            BaseSegment currentSequence = segments.get(currentIndex);
+            shouldContinue = currentSequence.shouldContinueToNextSegment();
+            if (shouldContinue) {
+                currentIndex += 1;
+                segmentRuntime.reset();
+            }
         }
     }
 }
