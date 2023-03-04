@@ -39,7 +39,7 @@ public class DriveTeleOp extends OpMode {
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
     public static double INTAKE_SPEED_SCALAR = 1;
-    public static double INTAKE_DOWN_SCALAR = 0.5;
+    public static double INTAKE_DOWN_SCALAR = 0.4;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
     public static int DRIVER_RUMBLE_DURATION_MS = 300;
@@ -79,15 +79,14 @@ public class DriveTeleOp extends OpMode {
                 .run(() -> intakeArmPosition = IntakeArmPosition.IN)
                 .run(() -> liftClawRotation = LiftClawRotation.IN)
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
-                .waitSeconds(0.75)
+                .waitSeconds(0.65)
                 .run(() -> liftClawPosition = ClawPosition.CLOSED)
-                .waitSeconds(0.1)
+                .waitSeconds(0.08)
                 .run(() -> intakeClawPosition = ClawPosition.OPEN)
-                .waitSeconds(0.1)
+                .waitSeconds(0.08)
                 .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
                 .waitSeconds(0.1)
-                .run(() -> intakeArmPosition = IntakeArmPosition.DRIVE)
-                .waitSeconds(0.2);
+                .run(() -> intakeArmPosition = IntakeArmPosition.DRIVE);
 
         placeConeSequence = new Sequence()
                 .run(() -> liftClawRotation = LiftClawRotation.OUT)
