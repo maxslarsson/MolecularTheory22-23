@@ -51,14 +51,14 @@ public class Lift {
         leftMotor.setMotorType(leftMotorConfigurationType);
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         MotorConfigurationType rightMotorConfigurationType = rightMotor.getMotorType().clone();
         rightMotorConfigurationType.setAchieveableMaxRPMFraction(1.0);
         rightMotor.setMotorType(rightMotorConfigurationType);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftController = new PIDFController(INTAKE_PID, kV, kA, kStatic);
         rightController = new PIDFController(INTAKE_PID, kV, kA, kStatic);
@@ -107,11 +107,6 @@ public class Lift {
         );
 
         timer.reset();
-    }
-
-    public void freeFloat() {
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
     }
 
     // Power is automatically gravity corrected

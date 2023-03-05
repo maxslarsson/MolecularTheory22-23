@@ -88,7 +88,7 @@ public final class LogFiles {
         public double trackingWheelRadius = StandardTrackingWheelLocalizer.WHEEL_RADIUS;
         public double trackingGearRatio = StandardTrackingWheelLocalizer.GEAR_RATIO;
         public double trackingLateralDistance = StandardTrackingWheelLocalizer.LATERAL_DISTANCE;
-        public double trackingForwardOffset = StandardTrackingWheelLocalizer.FORWARD_OFFSET;
+        public double trackingForwardOffset = StandardTrackingWheelLocalizer.BACKWARD_OFFSET;
 
         public RevHubOrientationOnRobot.LogoFacingDirection LOGO_FACING_DIR = DriveConstants.LOGO_FACING_DIR;
         public RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIR = DriveConstants.USB_FACING_DIR;

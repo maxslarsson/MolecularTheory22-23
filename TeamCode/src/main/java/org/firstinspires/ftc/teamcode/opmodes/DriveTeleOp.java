@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.IntakeConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.LiftConstants;
-import org.firstinspires.ftc.teamcode.sequence.Sequence;
+import org.firstinspires.ftc.teamcode.asyncsequence.AsyncSequence;
 import org.firstinspires.ftc.teamcode.states.ClawPosition;
 import org.firstinspires.ftc.teamcode.states.DrivingDirection;
 import org.firstinspires.ftc.teamcode.states.DrivingMode;
@@ -31,25 +31,25 @@ import java.util.List;
 public class DriveTeleOp extends OpMode {
     //scalars set by claudia:
     public static double SPRINT_SPEED_SCALAR = 1;
-    public static double SPRINT_ROTATION_SCALAR = 0.75;
-    public static double NORMAL_SPEED_SCALAR = 0.78;
-    public static double NORMAL_ROTATION_SCALAR = 0.65;
+    public static double SPRINT_ROTATION_SCALAR = 0.9;
+    public static double NORMAL_SPEED_SCALAR = 0.9;
+    public static double NORMAL_ROTATION_SCALAR = 0.8;
     public static double SLOW_MODE_SPEED_SCALAR = 0.6;
-    public static double SLOW_MODE_ROTATION_SCALAR = 0.6;
+    public static double SLOW_MODE_ROTATION_SCALAR = 0.55;
 
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
-    public static double INTAKE_SPEED_SCALAR = 1;
-    public static double INTAKE_DOWN_SCALAR = 0.4;
+    public static double INTAKE_UP_SPEED_SCALAR = 1;
+    public static double INTAKE_DOWN_SPEED_SCALAR = 0.4;
     public static double GUNNER_STICK_THRESHOLD = 0.04;
 
-    public static int DRIVER_RUMBLE_DURATION_MS = 300;
+    public static int DRIVER_RUMBLE_DURATION_MS = 500;
 
     public SampleMecanumDrive drive;
     public Intake intake;
     public Lift lift;
-    private Sequence clawTransferSequence;
-    private Sequence placeConeSequence;
+    private AsyncSequence clawTransferAsyncSequence;
+    private AsyncSequence placeConeAsyncSequence;
 
     private Gamepad previousGamepad1;
     private Gamepad previousGamepad2;
@@ -74,22 +74,22 @@ public class DriveTeleOp extends OpMode {
         intake = new Intake(hardwareMap);
         lift = new Lift(hardwareMap);
 
-        clawTransferSequence = new Sequence()
+        clawTransferAsyncSequence = new AsyncSequence()
                 .run(() -> drivingDirection = DrivingDirection.LIFT)
                 .run(() -> gamepad1.rumble(DRIVER_RUMBLE_DURATION_MS))
                 .run(() -> intakeArmPosition = IntakeArmPosition.IN)
                 .run(() -> liftClawRotation = LiftClawRotation.IN)
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
-                .waitSeconds(0.65)
+                .waitSeconds(0.7)
                 .run(() -> liftClawPosition = ClawPosition.CLOSED)
-                .waitSeconds(0.07)
+                .waitSeconds(0.1)
                 .run(() -> intakeClawPosition = ClawPosition.OPEN)
-                .waitSeconds(0.07)
+                .waitSeconds(0.05)
                 .run(() -> liftClawRotation = LiftClawRotation.INTERMEDIATE)
-                .waitSeconds(0.07)
+                .waitSeconds(0.05)
                 .run(() -> intakeArmPosition = IntakeArmPosition.DRIVE);
 
-        placeConeSequence = new Sequence()
+        placeConeAsyncSequence = new AsyncSequence()
                 .run(() -> liftClawRotation = LiftClawRotation.OUT)
                 .waitSeconds(0.07)
                 .run(() -> liftClawPosition = ClawPosition.OPEN)
@@ -170,19 +170,21 @@ public class DriveTeleOp extends OpMode {
         // ---------------
         // Gunner controls
         // ---------------
-        if (!clawTransferSequence.isDone()) {
-            lift.freeFloat();
-        } else if (Math.abs(gamepad2.left_stick_y) > GUNNER_STICK_THRESHOLD) {
-            double liftPower = -gamepad2.left_stick_y * INTAKE_SPEED_SCALAR;
-            if (liftPower < 0) liftPower *= INTAKE_DOWN_SCALAR;
+        if (Math.abs(gamepad2.left_stick_y) > GUNNER_STICK_THRESHOLD && clawTransferAsyncSequence.isDone()) {
+            double liftPower = -gamepad2.left_stick_y;
+            if (liftPower >= 0) {
+                liftPower *= INTAKE_UP_SPEED_SCALAR;
+            } else {
+                liftPower *= INTAKE_DOWN_SPEED_SCALAR;
+            }
             lift.setPower(liftPower);
         } else {
             lift.stepController();
         }
 
-        if (!previousGamepad2.a && gamepad2.a && placeConeSequence.isDone()) {
+        if (!previousGamepad2.a && gamepad2.a && placeConeAsyncSequence.isDone()) {
             if (liftClawRotation == LiftClawRotation.INTERMEDIATE) {
-                placeConeSequence.start();
+                placeConeAsyncSequence.start();
             } else {
                 if (intakeClawPosition == ClawPosition.OPEN) {
                     intakeClawPosition = ClawPosition.CLOSED;
@@ -193,8 +195,8 @@ public class DriveTeleOp extends OpMode {
         }
 
         // Use B to toggle arm position
-        if (!previousGamepad2.b && gamepad2.b && clawTransferSequence.isDone() && intakeClawPosition == ClawPosition.CLOSED) {
-            clawTransferSequence.start();
+        if (!previousGamepad2.b && gamepad2.b && clawTransferAsyncSequence.isDone() && intakeClawPosition == ClawPosition.CLOSED) {
+            clawTransferAsyncSequence.start();
         }
 
         // Set intake arm position
@@ -260,8 +262,8 @@ public class DriveTeleOp extends OpMode {
         // Clean up
         // ---------
         drive.update();
-        clawTransferSequence.update();
-        placeConeSequence.update();
+        clawTransferAsyncSequence.update();
+        placeConeAsyncSequence.update();
 
         previousGamepad1.copy(gamepad1);
         previousGamepad2.copy(gamepad2);

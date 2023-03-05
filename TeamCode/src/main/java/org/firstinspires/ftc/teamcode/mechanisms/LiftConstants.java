@@ -7,7 +7,7 @@ public class LiftConstants {
     public static double CLAW_OPEN_POSITION = 0;
     public static double CLAW_CLOSED_POSITION = 0.18;
     public static double CLAW_IN_ROTATION = 0.25;
-    public static double CLAW_INTERMEDIATE_ROTATION = 0.9;
+    public static double CLAW_INTERMEDIATE_ROTATION = 0.82;
     public static double CLAW_OUT_ROTATION = 1;
 
     public static double HIGH_JUNCTION_HEIGHT = 2200;

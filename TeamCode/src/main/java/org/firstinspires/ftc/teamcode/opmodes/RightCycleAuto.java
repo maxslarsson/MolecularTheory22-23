@@ -12,13 +12,16 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.vision.AprilTagPipeline;
 import org.firstinspires.ftc.teamcode.vision.CameraController;
 
 @Config
 @Autonomous(preselectTeleOp = "Drive TeleOp")
-public class ParkingAuto extends LinearOpMode {
-    public static Pose2d START_POSE = new Pose2d(36, -61.8, Math.toRadians(270));
+public class RightCycleAuto extends LinearOpMode {
+    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(270));
+    public static Pose2d PLACE_CONE_POSE = new Pose2d(26,  -3.8, Math.toRadians(90));
+    public static Pose2d STACK_POSE = new Pose2d(62.2, -5.2, Math.toRadians(0));
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -30,6 +33,14 @@ public class ParkingAuto extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(START_POSE);
+
+        TrajectorySequence placePreloadedCone = drive.trajectorySequenceBuilder(START_POSE)
+                .lineToSplineHeading(new Pose2d(54, -60, Math.toRadians(270)))
+                .splineToConstantHeading(new Vector2d(60, -24), Math.toRadians(90))
+                .build();
+
+
+//        TrajectorySequence trajectorySequence = trajectorySequenceBuilder.build();
 
         while (!isStarted() && !isStopRequested()) {
             telemetry.addData("Parking Position", aprilTagPipeline.getParkingPosition());

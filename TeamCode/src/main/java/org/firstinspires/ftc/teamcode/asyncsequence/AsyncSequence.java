@@ -1,31 +1,31 @@
-package org.firstinspires.ftc.teamcode.sequence;
+package org.firstinspires.ftc.teamcode.asyncsequence;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Sequence {
+public class AsyncSequence {
     private ElapsedTime segmentRuntime;
     private List<BaseSegment> segments;
     private int currentIndex = Integer.MAX_VALUE;
 
-    public Sequence() {
+    public AsyncSequence() {
         segmentRuntime = new ElapsedTime();
         segments = new ArrayList<>();
     }
 
-    public Sequence run(RunFunctionSegment lambda) {
+    public AsyncSequence run(RunFunctionSegment lambda) {
         segments.add(lambda);
         return this;
     }
 
-    public Sequence waitUntilTrue(WaitUntilTrueSegment lambda) {
+    public AsyncSequence waitUntilTrue(WaitUntilTrueSegment lambda) {
         segments.add(lambda);
         return this;
     }
 
-    public Sequence waitSeconds(double seconds) {
+    public AsyncSequence waitSeconds(double seconds) {
         segments.add(() -> segmentRuntime.seconds() >= seconds);
         return this;
     }
@@ -41,12 +41,12 @@ public class Sequence {
 
     public void update() {
         //coded by claudia:
-        if (isDone()) {
-            return;
-        }
-
         boolean shouldContinue = true;
         while (shouldContinue) {
+            if (isDone()) {
+                return;
+            }
+
             BaseSegment currentSequence = segments.get(currentIndex);
             shouldContinue = currentSequence.shouldContinueToNextSegment();
             if (shouldContinue) {

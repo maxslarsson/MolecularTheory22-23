@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.sequence;
+package org.firstinspires.ftc.teamcode.asyncsequence;
 
 public interface BaseSegment {
     // Return whether the Sequence should move on to the next segment
