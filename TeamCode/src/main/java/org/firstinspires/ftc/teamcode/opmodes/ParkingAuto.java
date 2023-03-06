@@ -11,6 +11,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.IntakeConstants;
+import org.firstinspires.ftc.teamcode.mechanisms.Lift;
+import org.firstinspires.ftc.teamcode.mechanisms.LiftConstants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.vision.AprilTagPipeline;
 import org.firstinspires.ftc.teamcode.vision.CameraController;
@@ -18,7 +22,7 @@ import org.firstinspires.ftc.teamcode.vision.CameraController;
 @Config
 @Autonomous(preselectTeleOp = "Drive TeleOp")
 public class ParkingAuto extends LinearOpMode {
-    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(90));
+    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(270));
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -30,6 +34,17 @@ public class ParkingAuto extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(START_POSE);
+
+        Intake intake = new Intake(hardwareMap);
+        Lift lift = new Lift(hardwareMap);
+
+        // ------------
+        // Set defaults
+        // ------------
+        intake.setClawPosition(IntakeConstants.CLAW_OPEN_POSITION);
+        intake.setArmPosition(IntakeConstants.ARM_DRIVE_POSITION);
+        lift.setClawPosition(LiftConstants.CLAW_CLOSED_POSITION);
+        lift.setClawRotation(LiftConstants.CLAW_IN_ROTATION);
 
         while (!isStarted() && !isStopRequested()) {
             telemetry.addData("Parking Position", aprilTagPipeline.getParkingPosition());
@@ -45,7 +60,7 @@ public class ParkingAuto extends LinearOpMode {
         switch (aprilTagPipeline.getParkingPosition()) {
             case ZONE1:
                 driveToParkingPosition = drive.trajectorySequenceBuilder(START_POSE)
-                        .lineToSplineHeading(new Pose2d(18, -60, Math.toRadians(90)))
+                        .lineToSplineHeading(new Pose2d(18, -60, Math.toRadians(270)))
                         .splineToConstantHeading(new Vector2d(12, -24), Math.toRadians(90))
                         .build();
                 break;
@@ -57,7 +72,7 @@ public class ParkingAuto extends LinearOpMode {
                 break;
             case ZONE3:
                 driveToParkingPosition = drive.trajectorySequenceBuilder(START_POSE)
-                        .lineToSplineHeading(new Pose2d(54, -60, Math.toRadians(90)))
+                        .lineToSplineHeading(new Pose2d(54, -60, Math.toRadians(270)))
                         .splineToConstantHeading(new Vector2d(60, -24), Math.toRadians(90))
                         .build();
                 break;

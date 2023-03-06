@@ -7,7 +7,7 @@ import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
-    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(90));
+    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(270));
     public static Pose2d PLACE_PRELOADED_CONE_POSE = new Pose2d(24,  -8.5, Math.toRadians(270));
     public static Pose2d PLACE_CONE_POSE = new Pose2d(30,  -6, Math.toRadians(330));
     public static Pose2d STACK_POSE = new Pose2d(58.5, -12, Math.toRadians(0));
@@ -19,8 +19,13 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 17)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(PLACE_CONE_POSE)
-                                .splineTo(new Vector2d(60, -12), Math.toRadians(0))
+                        drive.trajectorySequenceBuilder(START_POSE)
+                                .lineToConstantHeading(new Vector2d(18, -60))
+                                .splineToConstantHeading(new Vector2d(12, -36), Math.toRadians(90))
+//                                .addTemporalMarker(() -> lift.setClawRotation(LiftConstants.CLAW_OUT_ROTATION))
+//                                .addTemporalMarker(() -> lift.followMotionProfileAsync(LiftConstants.HIGH_JUNCTION_HEIGHT))
+                                .splineToConstantHeading(PLACE_PRELOADED_CONE_POSE.vec(), Math.toRadians(0))
+//                                .addTemporalMarker(() -> placeConeAsyncSequence.start())
                                 .build()
                 );
 

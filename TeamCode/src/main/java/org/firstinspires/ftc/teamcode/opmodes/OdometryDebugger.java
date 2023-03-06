@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp
+@TeleOp(group = "debug")
 public class OdometryDebugger extends OpMode {
     public StandardTrackingWheelLocalizer threeWheelOdometryLocalizer;
 

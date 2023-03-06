@@ -17,7 +17,7 @@ public class CameraController {
     private final OpenCvWebcam camera;
 
     public CameraController(HardwareMap hardwareMap) {
-        WebcamName webcamName = hardwareMap.get(WebcamName.class, "cam");
+        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName);
 
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {

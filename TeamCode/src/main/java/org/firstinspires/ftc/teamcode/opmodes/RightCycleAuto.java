@@ -28,13 +28,13 @@ import org.firstinspires.ftc.teamcode.vision.CameraController;
 @Config
 @Autonomous(preselectTeleOp = "Drive TeleOp")
 public class RightCycleAuto extends LinearOpMode {
-    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(90));
+    public static Pose2d START_POSE = new Pose2d(36, -61.5, Math.toRadians(270));
     public static Pose2d PLACE_PRELOADED_CONE_POSE = new Pose2d(24,  -8.5, Math.toRadians(270));
     public static Pose2d PLACE_CONE_POSE = new Pose2d(26,  -3.8, Math.toRadians(90));
     public static Pose2d STACK_POSE = new Pose2d(60, -12, Math.toRadians(0));
 
 
-    public static int CONES_TO_PLACE = 2;
+    public static int CONES_TO_PLACE = 1;
     private int placedCones = 0;
 
     private enum State {
@@ -102,12 +102,13 @@ public class RightCycleAuto extends LinearOpMode {
         // Build trajectories
         // ------------------
         TrajectorySequence placePreloadedCone = drive.trajectorySequenceBuilder(START_POSE)
-                .lineToSplineHeading(new Pose2d(18, -60, Math.toRadians(90)))
-                .splineToSplineHeading(new Pose2d(12, -36, Math.toRadians(0)), Math.toRadians(90))
-                .addTemporalMarker(() -> lift.setClawRotation(LiftConstants.CLAW_OUT_ROTATION))
+                .addTemporalMarker(() -> lift.setClawRotation(LiftConstants.CLAW_INTERMEDIATE_ROTATION))
                 .addTemporalMarker(() -> lift.followMotionProfileAsync(LiftConstants.HIGH_JUNCTION_HEIGHT))
-                .splineToSplineHeading(PLACE_PRELOADED_CONE_POSE, Math.toRadians(0))
+                .lineToConstantHeading(new Vector2d(18, -60))
+                .splineToConstantHeading(new Vector2d(12, -36), Math.toRadians(90))
+                .splineToConstantHeading(PLACE_PRELOADED_CONE_POSE.vec(), Math.toRadians(0))
                 .addTemporalMarker(() -> placeConeAsyncSequence.start())
+                .waitSeconds(0.5)
                 .build();
 
         TrajectorySequence preloadedToStack = drive.trajectorySequenceBuilder(PLACE_PRELOADED_CONE_POSE)
@@ -122,8 +123,8 @@ public class RightCycleAuto extends LinearOpMode {
                 .waitSeconds(0.2)
                 .setReversed(true)
                 .splineTo(PLACE_CONE_POSE.vec(), PLACE_CONE_POSE.getHeading() - Math.toRadians(180))
-                .waitSeconds(0.5)
                 .addTemporalMarker(() -> placeConeAsyncSequence.start())
+                .waitSeconds(0.5)
                 .build();
 
         TrajectorySequence placeToStack = drive.trajectorySequenceBuilder(PLACE_CONE_POSE)
@@ -143,17 +144,20 @@ public class RightCycleAuto extends LinearOpMode {
         switch (aprilTagPipeline.getParkingPosition()) {
             case ZONE1:
                 placeToParking = drive.trajectorySequenceBuilder(PLACE_CONE_POSE)
+                        .addTemporalMarker(() -> lift.followMotionProfileAsync(0))
                         .setTangent(PLACE_CONE_POSE.getHeading() - Math.toRadians(90))
                         .splineTo(new Vector2d(12, -12), Math.toRadians(180))
                         .build();
                 break;
             default: // ZONE2 and NO_TAGS_SEEN
                 placeToParking = drive.trajectorySequenceBuilder(PLACE_CONE_POSE)
+                        .addTemporalMarker(() -> lift.followMotionProfileAsync(0))
                         .splineTo(new Vector2d(36, -12), Math.toRadians(270))
                         .build();
                 break;
             case ZONE3:
                 placeToParking = drive.trajectorySequenceBuilder(PLACE_CONE_POSE)
+                        .addTemporalMarker(() -> lift.followMotionProfileAsync(0))
                         .splineTo(new Vector2d(60, -12), Math.toRadians(0))
                         .build();
                 break;

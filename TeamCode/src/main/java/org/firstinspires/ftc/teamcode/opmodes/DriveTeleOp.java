@@ -34,8 +34,8 @@ public class DriveTeleOp extends OpMode {
     public static double SPRINT_ROTATION_SCALAR = 0.9;
     public static double NORMAL_SPEED_SCALAR = 0.9;
     public static double NORMAL_ROTATION_SCALAR = 0.8;
-    public static double SLOW_MODE_SPEED_SCALAR = 0.6;
-    public static double SLOW_MODE_ROTATION_SCALAR = 0.55;
+    public static double SLOW_MODE_SPEED_SCALAR = 0.4;
+    public static double SLOW_MODE_ROTATION_SCALAR = 0.4;
 
     public static double DRIVER_CANCEL_SPRINT_THRESHOLD = 0.85;
 
@@ -127,7 +127,7 @@ public class DriveTeleOp extends OpMode {
             drivingMode = DrivingMode.SPRINT;
         }
 
-        if (-gamepad1.left_stick_y < DRIVER_CANCEL_SPRINT_THRESHOLD) {
+        if (-gamepad1.left_stick_y < DRIVER_CANCEL_SPRINT_THRESHOLD && drivingMode == DrivingMode.SPRINT) {
             drivingMode = DrivingMode.NORMAL;
         }
 
